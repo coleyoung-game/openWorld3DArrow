@@ -1,9 +1,11 @@
-using System.Collections;
+Ôªøusing System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class CameraController : MonoBehaviour
 {
+    [SerializeField] private CameraCollisionChecker m_CamColChecker;
+    [SerializeField] private Transform m_CameraPos;
     [SerializeField] private Transform m_PlayerPos;
     [SerializeField] private Transform m_Raycaster;
     [SerializeField] private float m_MaxRadius;
@@ -28,61 +30,27 @@ public class CameraController : MonoBehaviour
     // Update is called once per frame
     void LateUpdate()
     {
-        RotateForMouse();
+        CameraMove();
     }
-
-
-    private void OnTriggerEnter(Collider other)
-    {
-        if (other.gameObject.CompareTag("Box"))
-        {
-            m_CurrRadius = 1;
-        }
-    }
-
-    private void OnTriggerExit(Collider other)
-    {
-        if (other.gameObject.CompareTag("Box"))
-        {
-            m_CurrRadius = m_MaxRadius;
-        }
-    }
-
-
     private void Init()
     {
         m_ScreenWidth = Screen.currentResolution.width;
         m_ScreenHeight = Screen.currentResolution.height;
         m_CurrRadius = m_MaxRadius;
+        m_CamColChecker.Init(m_MaxRadius);
     }
 
     // 1920 / 1920 , 360 / 360
-    private void RotateForMouse()
+    private void CameraMove()
     {
-        m_X_Direction = m_CurrRadius * Mathf.Sin(m_Sensitive * Input.mousePosition.x / m_ScreenWidth);
-        m_Z_Direction = m_CurrRadius * Mathf.Cos(m_Sensitive * Input.mousePosition.x / m_ScreenWidth); // ∞Ëº” µπæ∆∞°µµ µ .
+        m_X_Direction = Mathf.Sin(m_Sensitive * Input.mousePosition.x / m_ScreenWidth);
+        m_Z_Direction = Mathf.Cos(m_Sensitive * Input.mousePosition.x / m_ScreenWidth); // Í≥ÑÏÜç ÎèåÏïÑÍ∞ÄÎèÑ Îê®.
 
         m_Y_Direction = Mathf.Lerp(-5.0f, 5.0f, Input.mousePosition.y / m_ScreenHeight);
-        transform.position = m_PlayerPos.position + m_CameraOffset + new Vector3(m_X_Direction, m_IsYReverse ? -m_Y_Direction : m_Y_Direction, m_Z_Direction);
-        transform.LookAt(m_PlayerPos);
-        //Ray ray;
-        //RaycastHit t_RayHit;
-        //Debug.DrawRay(m_Raycaster.position, m_Raycaster.forward * m_MaxRadius, Color.red, 0.01f);
-        //// TODO: raycast∏¶ ΩÓ¥¬ GameObject∏¶ «œ≥™ ¥ı µ–¥Ÿ. ±◊ GameObject¿« ¿ßƒ°¥¬ ∫Ø«œ¡ˆ æ ¥¬¥Ÿ.
-        //if (Physics.Raycast(m_Raycaster.position, m_Raycaster.forward * m_MaxRadius, out t_RayHit, m_MaxRadius))
-        //{
-        //    if(t_RayHit.collider.gameObject.CompareTag("Box"))
-        //    {
-        //        m_CurrRadius = 1;
-        //    }
-        //    else if (t_RayHit.collider.gameObject.CompareTag("Player"))
-        //    {
-        //        m_CurrRadius = m_MaxRadius;
-        //    }
-        //    Debug.Log("!");
-        //    //m_CurrRadius = 1;//Vector3.Distance(transform.position, t_RayHit.transform.position);
-        //    Debug.Log($"m_CurrRadius :{m_CurrRadius}");
-        //    //if (Vector3.Distance(transform.position, t_RayHit.transform.position))
-        //}
+        m_CameraPos.position = m_PlayerPos.position + m_CameraOffset + new Vector3(m_X_Direction * m_CamColChecker.Distance, m_IsYReverse ? -m_Y_Direction : m_Y_Direction, m_Z_Direction * m_CamColChecker.Distance);
+        m_CameraPos.LookAt(m_PlayerPos);
+        
+        m_CamColChecker.transform.position = m_PlayerPos.position + m_CameraOffset + new Vector3(m_X_Direction * m_MaxRadius, m_IsYReverse ? -m_Y_Direction : m_Y_Direction, m_Z_Direction * m_MaxRadius);
+        m_CamColChecker.transform.LookAt(m_PlayerPos);
     }
 }
